@@ -2,10 +2,8 @@ const axios = require("axios");
 
 exports.handler = async (event) => {
     try {
-        // Log the incoming event
-        console.log("Event received:", event);
-
-        const { url } = JSON.parse(event.body);
+        // Extract the URL from query parameters
+        const { url } = event.queryStringParameters;
 
         if (!url) {
             console.error("No URL provided.");
@@ -17,7 +15,7 @@ exports.handler = async (event) => {
 
         console.log("Fetching LinkedIn page for URL:", url);
 
-        // Perform a simple GET request without cookies
+        // Fetch the LinkedIn page
         const response = await axios.get(url, {
             headers: {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
@@ -26,9 +24,11 @@ exports.handler = async (event) => {
         });
 
         const html = response.data;
-        console.log("HTML content length:", html.length);
 
-        // Extract the video URL directly from the HTML
+        // Log HTML snippet for debugging
+        console.log("HTML content snippet:", html.slice(0, 500)); // Log first 500 characters
+
+        // Extract video URL using regex
         const videoMatch = html.match(/"contentUrl":"(https:\/\/dms\.licdn\.com\/playlist\/vid\/v2\/[^"]+)"/);
 
         if (videoMatch && videoMatch[1]) {
@@ -49,6 +49,10 @@ exports.handler = async (event) => {
         };
     } catch (error) {
         console.error("Error occurred while fetching LinkedIn page:", error.message);
+
+        // Log the error details for debugging
+        console.error("Error details:", error);
+
         return {
             statusCode: 500,
             body: JSON.stringify({ error: "Failed to fetch video", details: error.message }),
