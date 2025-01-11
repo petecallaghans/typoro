@@ -21,6 +21,9 @@ exports.handler = async (event) => {
 
         const html = response.data;
 
+// Log the raw HTML
+console.log(html);
+
         // Extract the video URL from the background-image style
         const videoMatch = html.match(/background-image:\s*url\(&quot;(https:\/\/media\.licdn\.com\/dms\/image\/[^\s]+?)&quot;\)/);
 
