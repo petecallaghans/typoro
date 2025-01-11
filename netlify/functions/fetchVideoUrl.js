@@ -15,7 +15,6 @@ exports.handler = async (event) => {
             };
         }
 
-        // Fetch the LinkedIn page
         console.log("Fetching LinkedIn page...");
         const response = await axios.get(url, {
             headers: {
@@ -24,10 +23,11 @@ exports.handler = async (event) => {
             },
         });
 
-        const html = response.data;
-        console.log("Fetched HTML content length:", html.length);
+        console.log("Response received. Status:", response.status);
+        console.log("HTML content length:", response.data.length);
 
-        // Check for video metadata
+        const html = response.data;
+
         console.log("Attempting to match contentUrl...");
         const videoMatch = html.match(/"contentUrl":"(https:\/\/media\.licdn\.com\/[^"]+)"/);
         if (videoMatch && videoMatch[1]) {
@@ -38,7 +38,6 @@ exports.handler = async (event) => {
             };
         }
 
-        // Attempt to extract background image URL as a fallback
         console.log("Attempting to match background-image...");
         const backgroundImageMatch = html.match(/background-image:\s*url\(&quot;(https:\/\/media\.licdn\.com\/dms\/image\/[^\s]+?)&quot;\)/);
         if (backgroundImageMatch && backgroundImageMatch[1]) {
@@ -49,14 +48,13 @@ exports.handler = async (event) => {
             };
         }
 
-        // If neither match works, return an error
         console.error("Video URL not found");
         return {
             statusCode: 404,
             body: JSON.stringify({ error: "Video URL not found" }),
         };
     } catch (error) {
-        console.error("Error occurred:", error.message);
+        console.error("Error occurred while fetching LinkedIn page:", error.message);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: "Failed to fetch video", details: error.message }),
