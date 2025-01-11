@@ -2,12 +2,8 @@ const axios = require("axios");
 
 exports.handler = async (event) => {
     try {
-        // Log the incoming event
-        console.log("Event received:", JSON.stringify(event, null, 2));
-
-        // Parse the URL from the event body
-        const { url } = JSON.parse(event.body);
-
+        // Extract the URL from query parameters
+        const url = event.queryStringParameters?.url;
         if (!url) {
             console.error("No URL provided.");
             return {
@@ -28,10 +24,7 @@ exports.handler = async (event) => {
         });
 
         const html = response.data;
-        console.log("HTML content fetched successfully. Content length:", html.length);
-
-        // Log a snippet of the HTML to verify structure
-        console.log("HTML snippet:", html.slice(0, 2000));
+        console.log("HTML content length:", html.length);
 
         // Extract the video URL from the background-image style
         const videoMatch = html.match(/background-image:\s*url\(&quot;(https:\/\/media\.licdn\.com\/dms\/image\/[^\s]+?)&quot;\)/);
@@ -50,14 +43,6 @@ exports.handler = async (event) => {
         // Log additional information if no match is found
         console.log("Attempted regex match result:", videoMatch);
 
-        // Check for alternative structures (optional debugging step)
-        if (html.includes("vjs-poster")) {
-            console.log("Found a vjs-poster div in the HTML.");
-        } else {
-            console.log("No vjs-poster div found in the HTML.");
-        }
-
-        // If no video URL is found
         return {
             statusCode: 404,
             body: JSON.stringify({ error: "Video URL not found" }),
