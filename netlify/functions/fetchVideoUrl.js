@@ -1,57 +1,53 @@
-const chromium = require("chrome-aws-lambda");
-const puppeteer = require("puppeteer-core");
+const axios = require("axios");
 
 exports.handler = async (event) => {
-    const { url } = JSON.parse(event.body);
-
-    if (!url) {
-        return {
-            statusCode: 400,
-            body: JSON.stringify({ error: "No URL provided" }),
-        };
-    }
-
-    let browser = null;
-
     try {
-        browser = await puppeteer.launch({
-            args: chromium.args,
-            executablePath: await chromium.executablePath,
-            headless: chromium.headless,
-        });
+        const { url } = JSON.parse(event.body);
 
-        const page = await browser.newPage();
-        await page.goto(url, { waitUntil: "networkidle2" });
-
-        const videoUrl = await page.evaluate(() => {
-            const videoDiv = document.querySelector('.vjs-poster');
-            if (videoDiv) {
-                const style = videoDiv.style.backgroundImage;
-                const match = style.match(/url\("(.+?)"\)/);
-                return match ? match[1] : null;
-            }
-            return null;
-        });
-
-        if (videoUrl) {
+        if (!url) {
             return {
-                statusCode: 200,
-                body: JSON.stringify({ videoUrl }),
-            };
-        } else {
-            return {
-                statusCode: 404,
-                body: JSON.stringify({ error: "Video URL not found" }),
+                statusCode: 400,
+                body: JSON.stringify({ error: "No URL provided" }),
             };
         }
+
+        // Fetch the LinkedIn page
+        const response = await axios.get(url, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "Accept-Language": "en-US,en;q=0.9",
+            },
+        });
+
+        const html = response.data;
+
+        // Check for video metadata
+        const videoMatch = html.match(/"contentUrl":"(https:\/\/media\.licdn\.com\/[^"]+)"/);
+        if (videoMatch && videoMatch[1]) {
+            return {
+                statusCode: 200,
+                body: JSON.stringify({ videoUrl: videoMatch[1] }),
+            };
+        }
+
+        // Attempt to extract background image URL as a fallback
+        const backgroundImageMatch = html.match(/background-image:\s*url\(&quot;(https:\/\/media\.licdn\.com\/dms\/image\/[^\s]+?)&quot;\)/);
+        if (backgroundImageMatch && backgroundImageMatch[1]) {
+            return {
+                statusCode: 200,
+                body: JSON.stringify({ videoUrl: backgroundImageMatch[1] }),
+            };
+        }
+
+        // If neither match works, return an error
+        return {
+            statusCode: 404,
+            body: JSON.stringify({ error: "Video URL not found" }),
+        };
     } catch (error) {
         return {
             statusCode: 500,
             body: JSON.stringify({ error: "Failed to fetch video", details: error.message }),
         };
-    } finally {
-        if (browser !== null) {
-            await browser.close();
-        }
     }
 };
