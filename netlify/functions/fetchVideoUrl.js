@@ -1,4 +1,5 @@
-const puppeteer = require("puppeteer");
+const chromium = require("chrome-aws-lambda");
+const puppeteer = require("puppeteer-core");
 
 exports.handler = async (event) => {
     const { url } = JSON.parse(event.body);
@@ -10,18 +11,20 @@ exports.handler = async (event) => {
         };
     }
 
-    try {
-        const browser = await puppeteer.launch({
-            args: ['--no-sandbox', '--disable-setuid-sandbox'], // Required for Netlify
-        });
-        const page = await browser.newPage();
+    let browser = null;
 
-        // Go to the LinkedIn video URL
+    try {
+        browser = await puppeteer.launch({
+            args: chromium.args,
+            executablePath: await chromium.executablePath,
+            headless: chromium.headless,
+        });
+
+        const page = await browser.newPage();
         await page.goto(url, { waitUntil: "networkidle2" });
 
-        // Evaluate the rendered page to extract the video URL
         const videoUrl = await page.evaluate(() => {
-            const videoDiv = document.querySelector('.vjs-poster'); // Match the element
+            const videoDiv = document.querySelector('.vjs-poster');
             if (videoDiv) {
                 const style = videoDiv.style.backgroundImage;
                 const match = style.match(/url\("(.+?)"\)/);
@@ -29,8 +32,6 @@ exports.handler = async (event) => {
             }
             return null;
         });
-
-        await browser.close();
 
         if (videoUrl) {
             return {
@@ -48,5 +49,9 @@ exports.handler = async (event) => {
             statusCode: 500,
             body: JSON.stringify({ error: "Failed to fetch video", details: error.message }),
         };
+    } finally {
+        if (browser !== null) {
+            await browser.close();
+        }
     }
 };
