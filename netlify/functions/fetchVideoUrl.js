@@ -1,36 +1,41 @@
-const axios = require("axios");
+const puppeteer = require("puppeteer");
 
 exports.handler = async (event) => {
+    const { url } = JSON.parse(event.body);
+
+    if (!url) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({ error: "No URL provided" }),
+        };
+    }
+
     try {
-        const { url } = JSON.parse(event.body);
+        const browser = await puppeteer.launch({
+            args: ['--no-sandbox', '--disable-setuid-sandbox'], // Required for Netlify
+        });
+        const page = await browser.newPage();
 
-        if (!url) {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ error: "No URL provided" }),
-            };
-        }
+        // Go to the LinkedIn video URL
+        await page.goto(url, { waitUntil: "networkidle2" });
 
-        // Fetch the LinkedIn page
-        const response = await axios.get(url, {
-            headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-                "Accept-Language": "en-US,en;q=0.9",
-            },
+        // Evaluate the rendered page to extract the video URL
+        const videoUrl = await page.evaluate(() => {
+            const videoDiv = document.querySelector('.vjs-poster'); // Match the element
+            if (videoDiv) {
+                const style = videoDiv.style.backgroundImage;
+                const match = style.match(/url\("(.+?)"\)/);
+                return match ? match[1] : null;
+            }
+            return null;
         });
 
-        const html = response.data;
+        await browser.close();
 
-// Log the raw HTML
-console.log(html);
-
-        // Extract the video URL from the background-image style
-        const videoMatch = html.match(/background-image:\s*url\(&quot;(https:\/\/media\.licdn\.com\/dms\/image\/[^\s]+?)&quot;\)/);
-
-        if (videoMatch && videoMatch[1]) {
+        if (videoUrl) {
             return {
                 statusCode: 200,
-                body: JSON.stringify({ videoUrl: videoMatch[1] }),
+                body: JSON.stringify({ videoUrl }),
             };
         } else {
             return {
