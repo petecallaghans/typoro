@@ -29,6 +29,9 @@ exports.handler = async (event) => {
         const html = response.data;
         console.log("HTML content length:", html.length);
 
+        // Log the first 2000 characters of the HTML for debugging
+        console.log("HTML snippet:", html.slice(0, 2000));
+
         // Match the JSON in <script type="application/ld+json">
         const jsonMatch = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/);
         if (jsonMatch && jsonMatch[1]) {
