@@ -21,7 +21,7 @@ exports.handler = async (event) => {
 
         const html = response.data;
 
-        // Regex to match the background-image URL
+        // Extract the video URL from the background-image style
         const videoMatch = html.match(/background-image:\s*url\(&quot;(https:\/\/media\.licdn\.com\/dms\/image\/[^\s]+?)&quot;\)/);
 
         if (videoMatch && videoMatch[1]) {
