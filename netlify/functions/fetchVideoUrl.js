@@ -25,15 +25,15 @@ exports.handler = async (event) => {
 
         const html = response.data;
 
-        // Log HTML snippet for debugging
-        console.log("HTML content snippet:", html.slice(0, 500)); // Log first 500 characters
+        // Log a snippet of the HTML for debugging
+        console.log("HTML content snippet:", html.slice(0, 500));
 
-        // Extract video URL using regex
-        const videoMatch = html.match(/"contentUrl":"(https:\/\/dms\.licdn\.com\/playlist\/vid\/v2\/[^"]+)"/);
+        // Refined regex to match the correct video URL
+        const videoMatch = html.match(/"contentUrl":"(https:\/\/dms\.licdn\.com\/playlist\/vid\/v2\/[^"]+mp4[^"]+)"/);
 
         if (videoMatch && videoMatch[1]) {
             const videoUrl = videoMatch[1];
-            console.log("Video URL found:", videoUrl);
+            console.log("Correct Video URL found:", videoUrl);
             return {
                 statusCode: 200,
                 body: JSON.stringify({ videoUrl }),
