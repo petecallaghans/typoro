@@ -29,32 +29,18 @@ exports.handler = async (event) => {
         const html = response.data;
         console.log("HTML content length:", html.length);
 
-        // Log the first 2000 characters of the HTML for debugging
-        console.log("HTML snippet:", html.slice(0, 2000));
+        // Extract the video URL from the background-image style
+        const videoMatch = html.match(/background-image:\s*url\(&quot;(https:\/\/media\.licdn\.com\/dms\/image\/[^\s]+?)&quot;\)/);
 
-        // Match the JSON in <script type="application/ld+json">
-        const jsonMatch = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/);
-        if (jsonMatch && jsonMatch[1]) {
-            console.log("JSON block found, parsing...");
-
-            try {
-                const jsonData = JSON.parse(jsonMatch[1]);
-                console.log("Parsed JSON data:", jsonData);
-
-                if (jsonData.contentUrl) {
-                    console.log("Video URL found:", jsonData.contentUrl);
-                    return {
-                        statusCode: 200,
-                        body: JSON.stringify({ videoUrl: jsonData.contentUrl }),
-                    };
-                } else {
-                    console.error("No contentUrl found in JSON.");
-                }
-            } catch (parseError) {
-                console.error("Failed to parse JSON block:", parseError.message);
-            }
+        if (videoMatch && videoMatch[1]) {
+            const videoUrl = videoMatch[1];
+            console.log("Video URL found:", videoUrl);
+            return {
+                statusCode: 200,
+                body: JSON.stringify({ videoUrl }),
+            };
         } else {
-            console.error("No JSON block found in the HTML.");
+            console.error("Video URL not found in background-image style.");
         }
 
         // If no video URL is found
