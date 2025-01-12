@@ -9,6 +9,9 @@ exports.handler = async (event) => {
             console.error("No URL provided.");
             return {
                 statusCode: 400,
+                headers: {
+                    "Access-Control-Allow-Origin": "*", // Allow requests from any origin
+                },
                 body: JSON.stringify({ error: "No URL provided" }),
             };
         }
@@ -36,6 +39,9 @@ exports.handler = async (event) => {
             console.log("Correct Video URL found:", videoUrl);
             return {
                 statusCode: 200,
+                headers: {
+                    "Access-Control-Allow-Origin": "*", // Allow requests from any origin
+                },
                 body: JSON.stringify({ videoUrl }),
             };
         } else {
@@ -45,6 +51,9 @@ exports.handler = async (event) => {
         // If no video URL is found
         return {
             statusCode: 404,
+            headers: {
+                "Access-Control-Allow-Origin": "*", // Allow requests from any origin
+            },
             body: JSON.stringify({ error: "Video URL not found" }),
         };
     } catch (error) {
@@ -55,6 +64,9 @@ exports.handler = async (event) => {
 
         return {
             statusCode: 500,
+            headers: {
+                "Access-Control-Allow-Origin": "*", // Allow requests from any origin
+            },
             body: JSON.stringify({ error: "Failed to fetch video", details: error.message }),
         };
     }
