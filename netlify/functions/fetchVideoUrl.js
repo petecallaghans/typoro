@@ -1,6 +1,8 @@
 const axios = require("axios");
 
 exports.handler = async (event) => {
+    const allowedOrigin = "https://typoro.com"; // Your domain
+
     try {
         // Extract the URL from query parameters
         const { url } = event.queryStringParameters;
@@ -10,7 +12,7 @@ exports.handler = async (event) => {
             return {
                 statusCode: 400,
                 headers: {
-                    "Access-Control-Allow-Origin": "*", // Allow requests from any origin
+                    "Access-Control-Allow-Origin": allowedOrigin, // Allow requests only from your domain
                 },
                 body: JSON.stringify({ error: "No URL provided" }),
             };
@@ -40,7 +42,7 @@ exports.handler = async (event) => {
             return {
                 statusCode: 200,
                 headers: {
-                    "Access-Control-Allow-Origin": "*", // Allow requests from any origin
+                    "Access-Control-Allow-Origin": allowedOrigin, // Allow requests only from your domain
                 },
                 body: JSON.stringify({ videoUrl }),
             };
@@ -52,7 +54,7 @@ exports.handler = async (event) => {
         return {
             statusCode: 404,
             headers: {
-                "Access-Control-Allow-Origin": "*", // Allow requests from any origin
+                "Access-Control-Allow-Origin": allowedOrigin, // Allow requests only from your domain
             },
             body: JSON.stringify({ error: "Video URL not found" }),
         };
@@ -65,7 +67,7 @@ exports.handler = async (event) => {
         return {
             statusCode: 500,
             headers: {
-                "Access-Control-Allow-Origin": "*", // Allow requests from any origin
+                "Access-Control-Allow-Origin": allowedOrigin, // Allow requests only from your domain
             },
             body: JSON.stringify({ error: "Failed to fetch video", details: error.message }),
         };
